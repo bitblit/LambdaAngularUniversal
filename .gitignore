@@ -8,3 +8,4 @@ typings
 *.bak
 .DS_Store
 packaged-sam.yaml
+cw-setup.sh
