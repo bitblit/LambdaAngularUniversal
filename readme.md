@@ -36,23 +36,77 @@ create an Angular app that is SEO friendly and dirty cheap to run.
 
 Using this is pretty straightforward.  You'll need an AWS account, and keys running on your local machine for
 that account that basically have Power User priv.  Step them down later once you seen just how many privs you're
-going to need.  You'll also need to know the AWS account ID.
+going to need.  You'll also need to know the AWS account ID.  Oh, and you need Node (^6.10) and NPM.
 
-## Usage
+## First Run
 
-Clone the code and remove its Github link so you can substitute your own: 
+Clone the code, remove its Github link so you can substitute your own, and install all the dependencies :  
 
 ```
 git clone git@github.com:bitblit/LambdaAngularUniversal.git
 cd LambdaAngularUniversal
 rm -Rf .git
+npm install
 ```
 
 Then, you want to run configuration script:
 
 ```
-node scripts/configure
+npm run config -- --account-id="<accountId>" --bucket-name="<bucketName>" --region="<region>" --function-name="<functionName>"
 ```
+
+* account-id : this is obvious
+* bucket-name : From here on in, deployments will cause the whole thing to be zipped and sent to a bucket first.  This bucket.
+* region : AWS region.  I'd use **us-east-1**, but that just me.
+* function-name: Name for the lambda function that will be created.
+
+That will set up all of the various scripts.  It doesn't put anything too terribly secret in there, just your account ID
+and a bucket name, but if someone wants to contribute a patch to externalize these I'm happy to review it.
+
+Once that is done, you are ready to run the **first** deployment of your app:
+
+```
+npm run setup
+```
+
+This should create the stack.  If you go to CloudFormation you should see it in there, and one of the outputs will
+be the url at which you can find the system.  You can also get this by heading over to API gateway and looking for it there.
+
+## Subsequent runs
+
+Future deployments can be done by running:
+
+```
+npm run package-deploy
+```
+
+## Removal
+
+If you want to remove one of these just go to Cloudformation and delete the stack.  Cloud formation will take
+care of nuking everything downstream of there.  Or, locally you can run : 
+
+```
+npm run delete-stack
+```
+
+## Running locally
+
+There are 2 ways of running locally - the first is to run the full Universal stack.  You can do that by running:
+
+```
+npm run serve-full
+```
+
+This is useful for checking how it handles generating the snapshot (curl it to see that you are getting more than
+just the Angular placeholder).  However, I don't use it for day-to-day work since the webpack stuff for the
+server is pretty slow.  Instead, most of the time I use just the standard Angular endpoint:
+
+```
+npm run start
+```
+
+This runs Angular like you would if you weren't using Universal et al.  Much faster for day-to-day development.
+
 
 # Contributing
 
