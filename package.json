@@ -36,7 +36,12 @@
     "delete-stack": "aws cloudformation delete-stack --stack-name $npm_package_config_cloudFormationStackName --region $npm_package_config_region",
     "setup": "npm install && (aws s3 get-bucket-location --bucket $npm_package_config_s3BucketName --region $npm_package_config_region || npm run create-bucket) && npm run package-deploy"
   },
-  "keywords": ["angular","lambda","serverless","universal"],
+  "keywords": [
+    "angular",
+    "lambda",
+    "serverless",
+    "universal"
+  ],
   "author": "Christopher Weiss <bitblit@gmail.com>",
   "bugs": {
     "url": "https://github.com/bitblit/LambdaAngularUniversal/issues"

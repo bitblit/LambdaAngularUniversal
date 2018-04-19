@@ -72,6 +72,13 @@ npm run setup
 This should create the stack.  If you go to CloudFormation you should see it in there, and one of the outputs will
 be the url at which you can find the system.  You can also get this by heading over to API gateway and looking for it there.
 
+## Making it useful
+
+The template ships with the Tour of Heroes app from Angular already in place.  I do this since its a pretty good
+way to tell if everything is working, since it has multiple routes, relatively intricate pages, etc.  In general
+you'll want to nuke the contents of src/app and replace it with your application, but then if you are an 
+Angular developer you probably already figured that out on your own.
+
 ## Subsequent runs
 
 Future deployments can be done by running:

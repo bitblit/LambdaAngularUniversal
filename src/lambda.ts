@@ -1,3 +1,7 @@
+// This is the implementation of the Lambda interface that handles incoming requests from API gateway and
+// hands them off to the awsServerlessExpress library to convert them into something that express recognizes,
+// which is then converted into something Angular recognizes
+
 import * as awsServerlessExpress from 'aws-serverless-express';
 import {ServerApp} from './server-app';
 

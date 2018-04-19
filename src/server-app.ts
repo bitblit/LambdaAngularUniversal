@@ -6,9 +6,8 @@ import { enableProdMode } from '@angular/core';
 import { join } from 'path';
 
 import * as express from 'express';
-
 import * as logger from 'morgan';
-import * as bodyParser from 'body-parser';
+//import * as bodyParser from 'body-parser';
 import * as cors from 'cors';
 import * as awsServerlessExpressMiddleware from 'aws-serverless-express/middleware';
 import {Logger} from "@bitblit/ratchet/dist/common/logger";
@@ -64,8 +63,8 @@ export class ServerApp {
     // Cannot use this or it breaks angular - do compression at the
     // Cloudfront level instead this.express.use(compression());
     this.express.use(cors());
-    this.express.use(bodyParser.json());
-    this.express.use(bodyParser.urlencoded({extended: true}));
+    //this.express.use(bodyParser.json());
+    //this.express.use(bodyParser.urlencoded({extended: true}));
     this.express.use(awsServerlessExpressMiddleware.eventContext());
 
     this.express.use(function(error, req, res, next){
