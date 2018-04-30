@@ -114,6 +114,19 @@ npm run start
 
 This runs Angular like you would if you weren't using Universal et al.  Much faster for day-to-day development.
 
+## Weird notes
+
+Since this is a combination of a bunch of relatively bleeding-edge tech, and because I am no NodeJS expert,
+there are a couple weirdnesses going on in here that I am putting here as reminders to myself as why I am
+doing them.
+
+* Since this goes into Lambda, we have to include everything we want from node_modules.  We do that by
+running an npm install into the dist directory, basically
+* fsevents includes a tar package that has bad file modification dates in it.  Zip won't accept files
+older than 1980 for some reason.  So there is a find command in here to path those
+* There is still something weird about the build - if left without doing a clean the next package fails.  Need
+to investigate eventually, but at the moment this is solved by always doing a clean as part of the 
+"package" task.  A bit slower, but at least it works
 
 # Contributing
 
