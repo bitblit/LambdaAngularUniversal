@@ -1,6 +1,6 @@
 # LambdaAngularUniversal
 
-**Updated April 19th, 2018**
+**Updated April 30th, 2018**
 
 This project unites several of my most commonly used technologies in a way that solves a lot of problems for me.  Specifically:
 
