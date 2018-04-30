@@ -56,6 +56,7 @@ export class ServerApp {
     }));
 
     //this.express.set('view engine', 'pug');
+    this.express.disable('x-powered-by');
     this.express.set('view engine', 'html');
     this.express.set('views', join(this.distFolder, 'browser'));
 
