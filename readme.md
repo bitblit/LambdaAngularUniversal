@@ -79,6 +79,43 @@ way to tell if everything is working, since it has multiple routes, relatively i
 you'll want to nuke the contents of src/app and replace it with your application, but then if you are an 
 Angular developer you probably already figured that out on your own.
 
+Ok, so there is one thing that is pretty important here.  In your app.module.ts file, you are likely importing
+**BrowserModule**.  That needs to become **BrowserModule.withServerTransition({ appId: 'some-id' })** (TODO: what 
+are the constraints on appId here?).  
+
+You need to add these imports:
+
+```
+import { PLATFORM_ID, APP_ID, Inject } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
+```
+
+Additionally, your
+
+```
+export class AppModule {
+}
+```
+
+needs to become 
+
+```
+export class AppModule {
+  constructor(
+    @Inject(PLATFORM_ID) private platformId: Object,
+    @Inject(APP_ID) private appId: string) {
+    const platform = isPlatformBrowser(platformId) ?
+      'in the browser' : 'on the server';
+    console.log(`Running ${platform} with appId=${appId}`);
+  }
+}
+```
+
+There are other things you need to know about running Angular universal (mainly around not
+promiscuously using the window object because that can't be simulated server side) but you should
+read the Angular Universal docs for that stuff.
+
+
 ## Subsequent runs
 
 Future deployments can be done by running:
