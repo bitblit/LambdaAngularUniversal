@@ -49,19 +49,20 @@ rm -Rf .git
 npm install
 ```
 
-Then, you want to run configuration script:
-
+Then, you want to create a `.env` file at the root of the project with the following content:
 ```
-npm run config -- --account-id="<accountId>" --bucket-name="<bucketName>" --region="<region>" --function-name="<functionName>"
+AWS_ACCOUNT_ID=<account-id>
+S3_BUCKET_NAME=<bucket-name>
+AWS_REGION=<region>
+LAMBDA_FUNCTION_NAME=<function-name>
+CF_STACK_NAME=<stack-name>
 ```
 
 * account-id : this is obvious
 * bucket-name : From here on in, deployments will cause the whole thing to be zipped and sent to a bucket first.  This bucket.
 * region : AWS region.  I'd use **us-east-1**, but that just me.
 * function-name: Name for the lambda function that will be created.
-
-That will set up all of the various scripts.  It doesn't put anything too terribly secret in there, just your account ID
-and a bucket name, but if someone wants to contribute a patch to externalize these I'm happy to review it.
+* stack-name: Name for the Cloudformation stack that will be created.
 
 Once that is done, you are ready to run the **first** deployment of your app:
 
