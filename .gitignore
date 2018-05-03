@@ -7,5 +7,6 @@ cw-test.ts
 typings
 *.bak
 .DS_Store
+.env
 packaged-sam.yaml
 cw-setup.sh
