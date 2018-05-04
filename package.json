@@ -3,13 +3,6 @@
   "version": "0.0.1",
   "description": "Template for creating Angular 5 universal apps atop Lambda",
   "main": "lambda.js",
-  "config": {
-    "s3BucketName": "YOUR_UNIQUE_BUCKET_NAME",
-    "region": "YOUR_AWS_REGION",
-    "cloudFormationStackName": "YOUR_SERVERLESS_EXPRESS_LAMBDA_FUNCTION_NAMEStack",
-    "functionName": "YOUR_SERVERLESS_EXPRESS_LAMBDA_FUNCTION_NAME",
-    "accountId": "YOUR_ACCOUNT_ID"
-  },
   "scripts": {
     "ng": "ng",
     "build": "ng build --prod",
@@ -22,20 +15,19 @@
     "build:lambda": "npm run build:client-and-server-bundles && npm run webpack:server && gulp build:lambda",
     "clean": "gulp clean",
     "serve:full": "cd dist && node server.js",
-    "fix-bad-uglify-dates": "touch -t 198001010000 /tmp/1980-Jan-01-0000 && find ./dist -type f ! -newer /tmp/1980-Jan-01-0000 -exec touch -t 201601011200 '{}' \\;",
     "build:client-and-server-bundles": "ng build --prod && ng build --prod --app 1 --output-hashing=false",
     "webpack:server": "webpack --config webpack.server.config.js --progress --colors",
     "config": "node ./scripts/configure.js",
     "deconfig": "node ./scripts/deconfigure.js",
     "local": "node scripts/local",
-    "invoke:lambda": "aws lambda invoke --function-name $npm_package_config_functionName --region $npm_package_config_region --payload file://api-gateway-event.json lambda-invoke-response.json && cat lambda-invoke-response.json",
+    "invoke:lambda": "gulp invoke:lambda",
     "create:bucket": "gulp create:bucket",
     "delete:bucket": "gulp delete:bucket",
-    "package:cloudformation": "npm run clean && npm run build:lambda && npm run fix-bad-uglify-dates && gulp package:cloudformation",
+    "package:cloudformation": "npm run clean && npm run build:lambda && gulp package:cloudformation",
     "deploy:cloudformation": "gulp deploy:cloudformation",
     "package-deploy": "npm run package:cloudformation && npm run deploy:cloudformation",
     "delete:stack": "gulp delete:stack",
-    "setup": "npm install && gulp setup && npm run package-deploy"
+    "setup": "npm install && (gulp setup  || gulp create:bucket) && npm run package-deploy"
   },
   "keywords": [
     "angular",
@@ -101,7 +93,9 @@
     "dotenv": "^5.0.1",
     "gulp": "^3.9.1",
     "gulp-install": "^1.1.0",
+    "gulp-replace": "^0.6.1",
     "gulp-run-command": "0.0.9",
+    "gulp-touch-fd": "github:funkedigital/gulp-touch-fd",
     "hoek": "~4.2.1",
     "jasmine-core": "~2.8.0",
     "jasmine-spec-reporter": "^4.2.1",
