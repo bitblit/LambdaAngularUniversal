@@ -111,9 +111,16 @@ export class AppModule {
 }
 ```
 
+And if you are wiping out the directory, be sure not to delete app.server.module.ts - you need it, and you
+probably don't have it in your pre-universal application.
+
+You'll also want to take a close look at your .angular-cli.json file - especially if you are bringing in any
+external libraries or scripts, please notice that in the new file there are 2 versions (browser and server), and
+you'll need to put that info into both of them.
+
 There are other things you need to know about running Angular universal (mainly around not
 promiscuously using the window object because that can't be simulated server side) but you should
-read the Angular Universal docs for that stuff.
+read the Angular Universal docs for that stuff.  [This is a good overview] (https://medium.com/google-developer-experts/angular-universal-for-the-rest-of-us-922ca8bac84)
 
 
 ## Subsequent runs

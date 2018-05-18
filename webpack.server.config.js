@@ -14,7 +14,10 @@ module.exports = {
     umdNamedDefine: true
   },
   module: {
-    rules: [{ test: /\.ts$/, loader: 'ts-loader' }]
+    rules: [{ test: /\.ts$/, loader: 'ts-loader' },
+      { test: /\.(ts|js)$/, loader: 'regexp-replace-loader', query: { match: { pattern: '\\[(Mouse|Keyboard)Event\\]', flags: 'g' }, replaceWith: '[]', } }
+      // This second one is to fix libraries that depend on mouse and keyboard events in the server side render : https://github.com/valor-software/ngx-bootstrap/issues/964
+    ]
   },
   plugins: [
     // Temporary Fix for issue: https://github.com/angular/angular/issues/11580
