@@ -5,8 +5,6 @@ import 'reflect-metadata';
 
 import { enableProdMode } from '@angular/core';
 
-//import { join } from 'path';
-
 import { NgModuleFactory, Type, CompilerFactory, Compiler, StaticProvider } from '@angular/core';
 import { ResourceLoader } from '@angular/compiler';
 import {
@@ -51,66 +49,6 @@ const templateCache: { [key: string]: string } = {};
 const factoryCacheMap = new Map<Type<{}>, NgModuleFactory<{}>>();
 
 /**
- * This is an express engine for handling Angular Applications
- */
-export function ngLambdaEngine(setupOptions: NgSetupOptions) {
-
-
-  const compilerFactory: CompilerFactory = platformDynamicServer().injector.get(CompilerFactory);
-  const compiler: Compiler = compilerFactory.createCompiler([
-    {
-      providers: [
-        { provide: ResourceLoader, useClass: FileLoader, deps: [] }
-      ]
-    }
-  ]);
-
-  return function (filePath: string,
-                   options: RenderOptions,
-                   callback: (err?: Error | null, html?: string) => void) {
-
-    options.providers = options.providers || [];
-
-    try {
-      const moduleOrFactory = options.bootstrap || setupOptions.bootstrap;
-
-      if (!moduleOrFactory) {
-        throw new Error('You must pass in a NgModule or NgModuleFactory to be bootstrapped');
-      }
-
-      setupOptions.providers = setupOptions.providers || [];
-
-      const extraProviders = setupOptions.providers.concat(
-        options.providers,
-        //getReqResProviders(options.req, options.res),
-        [
-          {
-            provide: INITIAL_CONFIG,
-            useValue: {
-              document: options.document || getDocument(filePath),
-              url: options.url //|| options.req.originalUrl
-            }
-          }
-        ]);
-
-      getFactory(moduleOrFactory, compiler)
-        .then(factory => {
-          return renderModuleFactory(factory, {
-            extraProviders
-          });
-        })
-        .then((html: string) => {
-          callback(null, html);
-        }, (err) => {
-          callback(err);
-        });
-    } catch (err) {
-      callback(err);
-    }
-  };
-}
-
-/**
  * Get a factory from a bootstrapped module/ module factory
  */
 function getFactory(
@@ -141,25 +79,6 @@ function getFactory(
     }
   });
 }
-
-/**
- * Get providers of the request and response
- *
-function getReqResProviders(req: Request, res?: Response): StaticProvider[] {
-  const providers: StaticProvider[] = [
-    {
-      provide: REQUEST,
-      useValue: req
-    }
-  ];
-  if (res) {
-    providers.push({
-      provide: RESPONSE,
-      useValue: res
-    });
-  }
-  return providers;
-}*/
 
 /**
  * Get the document at the file path
