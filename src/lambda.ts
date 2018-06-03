@@ -16,6 +16,7 @@ import {
 import { FileLoader } from './file-loader';
 import {provideModuleMap} from "@nguniversal/module-map-ngfactory-loader";
 import {join} from "path";
+import {APP_BASE_HREF} from "@angular/common";
 
 enableProdMode();
 const { AppServerModuleNgFactory, LAZY_MODULE_MAP } = require('../dist/server/main.bundle');
@@ -95,82 +96,123 @@ function getDocument(filePath: string): string {
  * @param {Callback} callback
  */
 const handler: Handler = (event: any, context: Context, callback: Callback) => {
+  let filePath = join(process.cwd(), 'browser', event.path);
 
 
-  debugger;
+  if (fs.existsSync(filePath)) {
+    // Do something
+    let contents : Buffer = fs.readFileSync(filePath);
+    let contents64 = contents.toString('base64');
+    let contentType : string = "application/octet-stream";
 
-  try {
-  let setupOptions : NgSetupOptions=
+    let response = {
+      statusCode: 200,
+      isBase64Encoded: true,
+      headers: {
+        "Content-Type" : contentType
+      },
+      body: contents64
+    };
+
+    callback(null,response);
+  }
+  else
   {
-    bootstrap: AppServerModuleNgFactory,
-      providers: [
-    provideModuleMap(LAZY_MODULE_MAP)
-  ]
-  };
-  //const moduleOrFactory = options.bootstrap || setupOptions.bootstrap;
+    // Render with Angular
+    let filePath = join(process.cwd(), 'browser', "index.html");
 
-  const moduleOrFactory = setupOptions.bootstrap;
+    try {
+      let setupOptions : NgSetupOptions=
+        {
+          bootstrap: AppServerModuleNgFactory,
+          providers: [
+            provideModuleMap(LAZY_MODULE_MAP)
+          ]
+        };
+      //const moduleOrFactory = options.bootstrap || setupOptions.bootstrap;
 
-  const compilerFactory: CompilerFactory = platformDynamicServer().injector.get(CompilerFactory);
-  const compiler: Compiler = compilerFactory.createCompiler([
-    {
-      providers: [
-        { provide: ResourceLoader, useClass: FileLoader, deps: [] }
-      ]
-    }
-  ]);
+      const moduleOrFactory = setupOptions.bootstrap;
 
-
-  const filePath = join(process.cwd(), 'browser', 'index.html');
-  const url = event.path;
-
-  const extraProviders = setupOptions.providers.concat(
-    //options.providers,
-    //getReqResProviders(options.req, options.res),
-    [
-      {
-        provide: INITIAL_CONFIG,
-        useValue: {
-          document: getDocument(filePath), // options.document || getDocument(filePath)
-          url: url// options.url //|| options.req.originalUrl
+      const compilerFactory: CompilerFactory = platformDynamicServer().injector.get(CompilerFactory);
+      const compiler: Compiler = compilerFactory.createCompiler([
+        {
+          providers: [
+            { provide: ResourceLoader, useClass: FileLoader, deps: [] }
+          ]
         }
-      }
-    ]);
+      ]);
 
-  //const extraProviders = setupOptions.providers;
 
-    console.log("About to call to factory");
-  getFactory(moduleOrFactory, compiler)
-    .then(factory => {
-      return renderModuleFactory(factory, {
-        extraProviders
-      });
-    })
-    .then((html: string) => {
-      console.log("About to write to output : "+html);
 
-      // The output from a Lambda proxy integration must be
-      // of the following JSON object. The 'headers' property
-      // is for custom response headers in addition to standard
-      // ones. The 'body' property  must be a JSON string. For
-      // base64-encoded payload, you must also set the 'isBase64Encoded'
-      // property to 'true'.
-      let response = {
-        statusCode: 200,
-        headers: {
-          "Content-Type" : "text/html",
-          "x-custom-header" : "my custom header value"
-        },
-        body: html
-      };
 
-      callback(null,response);
-    }, (err) => {
+      /*
+      const baseHref =
+        event['headers']['X-Forwarded-Proto']+"://"+
+        event['headers']['Host']+'/'+
+        event['requestContext']['stage'];
+        */
+      const baseHref = '/'+event['requestContext']['stage'];
+
+      // TODO: Query params
+
+      const url = event.path;
+
+      const extraProviders = setupOptions.providers.concat(
+        //options.providers,
+        //getReqResProviders(options.req, options.res),
+        [
+          {
+            provide: INITIAL_CONFIG,
+            useValue: {
+              document: getDocument(filePath), // options.document || getDocument(filePath)
+              url: url// options.url //|| options.req.originalUrl
+            }
+          },
+          {
+            provide: APP_BASE_HREF,
+            useValue: baseHref
+          }
+        ]);
+
+      console.log("Evt : \n"+JSON.stringify(event));
+      console.log("Using url : "+url + " Base : "+baseHref+" FilePath: "+filePath);
+
+      //const extraProviders = setupOptions.providers;
+
+      console.log("About to call to factory");
+      getFactory(moduleOrFactory, compiler)
+        .then(factory => {
+          return renderModuleFactory(factory, {
+            extraProviders
+          });
+        })
+        .then((html: string) => {
+          console.log("About to write to output : "+html);
+
+          // The output from a Lambda proxy integration must be
+          // of the following JSON object. The 'headers' property
+          // is for custom response headers in addition to standard
+          // ones. The 'body' property  must be a JSON string. For
+          // base64-encoded payload, you must also set the 'isBase64Encoded'
+          // property to 'true'.
+          let response = {
+            statusCode: 200,
+            headers: {
+              "Content-Type" : "text/html",
+              "x-custom-header" : "my custom header value"
+            },
+            body: html
+          };
+
+          callback(null,response);
+        }, (err) => {
+          callback(err);
+        });
+    } catch (err) {
       callback(err);
-    });
-} catch (err) {
-  callback(err);
-}
+    }
+  }
+
 };
 
 export {handler};
