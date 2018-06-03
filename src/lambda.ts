@@ -139,6 +139,7 @@ const handler: Handler = (event: any, context: Context, callback: Callback) => {
 
   //const extraProviders = setupOptions.providers;
 
+    console.log("About to call to factory");
   getFactory(moduleOrFactory, compiler)
     .then(factory => {
       return renderModuleFactory(factory, {
@@ -146,7 +147,24 @@ const handler: Handler = (event: any, context: Context, callback: Callback) => {
       });
     })
     .then((html: string) => {
-      callback(null,html);
+      console.log("About to write to output : "+html);
+
+      // The output from a Lambda proxy integration must be
+      // of the following JSON object. The 'headers' property
+      // is for custom response headers in addition to standard
+      // ones. The 'body' property  must be a JSON string. For
+      // base64-encoded payload, you must also set the 'isBase64Encoded'
+      // property to 'true'.
+      let response = {
+        statusCode: 200,
+        headers: {
+          "Content-Type" : "text/html",
+          "x-custom-header" : "my custom header value"
+        },
+        body: html
+      };
+
+      callback(null,response);
     }, (err) => {
       callback(err);
     });
@@ -155,4 +173,4 @@ const handler: Handler = (event: any, context: Context, callback: Callback) => {
 }
 };
 
-export default {handler};
+export {handler};
