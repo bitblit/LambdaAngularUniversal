@@ -13,12 +13,12 @@ import {
   platformDynamicServer
 } from '@angular/platform-server';
 
-const { AppServerModuleNgFactory, LAZY_MODULE_MAP } = require('../dist/server/main.bundle');
-
-
 import { FileLoader } from './file-loader';
 import {provideModuleMap} from "@nguniversal/module-map-ngfactory-loader";
 import {join} from "path";
+
+enableProdMode();
+const { AppServerModuleNgFactory, LAZY_MODULE_MAP } = require('../dist/server/main.bundle');
 
 /**
  * These are the allowed options for the engine
@@ -96,7 +96,6 @@ function getDocument(filePath: string): string {
  */
 const handler: Handler = (event: any, context: Context, callback: Callback) => {
 
-  enableProdMode();
 
   debugger;
 
@@ -156,4 +155,4 @@ const handler: Handler = (event: any, context: Context, callback: Callback) => {
 }
 };
 
-export {handler};
+export default {handler};
