@@ -1,5 +1,5 @@
 const lambdaFunction = require('../lambda.js')
-const apiGatewayEvent = require('../sample-json/api-gateway-event.json')
+const apiGatewayEvent = require('../src/api-gateway-event.json')
 
 const server = lambdaFunction.handler(apiGatewayEvent, {
   succeed: v => {

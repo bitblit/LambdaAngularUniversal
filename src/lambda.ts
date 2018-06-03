@@ -1,34 +1,240 @@
-// This is the implementation of the Lambda interface that handles incoming requests from API gateway and
-// hands them off to the awsServerlessExpress library to convert them into something that express recognizes,
-// which is then converted into something Angular recognizes
+import {Callback, Context, Handler} from "aws-lambda";
+import * as fs from 'fs';
+import 'zone.js/dist/zone-node';
+import 'reflect-metadata';
 
-import * as awsServerlessExpress from 'aws-serverless-express';
-import {ServerApp} from './server-app';
+import { enableProdMode } from '@angular/core';
 
-// NOTE: If you get ERR_CONTENT_DECODING_FAILED in your browser, this is likely
-// due to a compressed response (e.g. gzip) which has not been handled correctly
-// by aws-serverless-express and/or API Gateway. Add the necessary MIME types to
-// binaryMimeTypes below, then redeploy (`npm run package-deploy`)
-var binaryMimeTypes = [
-  'application/javascript',
-  'application/json',
-  'application/octet-stream',
-  'application/xml',
-  'font/eot',
-  'font/opentype',
-  'font/otf',
-  'image/jpeg',
-  'image/png',
-  'image/svg+xml',
-  'text/comma-separated-values',
-  'text/css',
-  'text/html',
-  'text/javascript',
-  'text/plain',
-  'text/text',
-  'text/xml'
-];
+//import { join } from 'path';
 
-var express = new ServerApp().getExpress();
-var server = awsServerlessExpress.createServer(express, function(){console.log("ServerListenCallback");}, binaryMimeTypes);
-export default function lambdaHandler(event, context){awsServerlessExpress.proxy(server, event, context)};
+import { NgModuleFactory, Type, CompilerFactory, Compiler, StaticProvider } from '@angular/core';
+import { ResourceLoader } from '@angular/compiler';
+import {
+  INITIAL_CONFIG,
+  renderModuleFactory,
+  platformDynamicServer
+} from '@angular/platform-server';
+
+const { AppServerModuleNgFactory, LAZY_MODULE_MAP } = require('../dist/server/main.bundle');
+
+
+import { FileLoader } from './file-loader';
+import {provideModuleMap} from "@nguniversal/module-map-ngfactory-loader";
+import {join} from "path";
+
+/**
+ * These are the allowed options for the engine
+ */
+export interface NgSetupOptions {
+  bootstrap: Type<{}> | NgModuleFactory<{}>;
+  providers?: StaticProvider[];
+}
+
+/**
+ * These are the allowed options for the render
+ */
+export interface RenderOptions extends NgSetupOptions {
+  req: Request;
+  res?: Response;
+  url?: string;
+  document?: string;
+}
+
+/**
+ * This holds a cached version of each index used.
+ */
+const templateCache: { [key: string]: string } = {};
+
+/**
+ * Map of Module Factories
+ */
+const factoryCacheMap = new Map<Type<{}>, NgModuleFactory<{}>>();
+
+/**
+ * This is an express engine for handling Angular Applications
+ */
+export function ngLambdaEngine(setupOptions: NgSetupOptions) {
+
+
+  const compilerFactory: CompilerFactory = platformDynamicServer().injector.get(CompilerFactory);
+  const compiler: Compiler = compilerFactory.createCompiler([
+    {
+      providers: [
+        { provide: ResourceLoader, useClass: FileLoader, deps: [] }
+      ]
+    }
+  ]);
+
+  return function (filePath: string,
+                   options: RenderOptions,
+                   callback: (err?: Error | null, html?: string) => void) {
+
+    options.providers = options.providers || [];
+
+    try {
+      const moduleOrFactory = options.bootstrap || setupOptions.bootstrap;
+
+      if (!moduleOrFactory) {
+        throw new Error('You must pass in a NgModule or NgModuleFactory to be bootstrapped');
+      }
+
+      setupOptions.providers = setupOptions.providers || [];
+
+      const extraProviders = setupOptions.providers.concat(
+        options.providers,
+        //getReqResProviders(options.req, options.res),
+        [
+          {
+            provide: INITIAL_CONFIG,
+            useValue: {
+              document: options.document || getDocument(filePath),
+              url: options.url //|| options.req.originalUrl
+            }
+          }
+        ]);
+
+      getFactory(moduleOrFactory, compiler)
+        .then(factory => {
+          return renderModuleFactory(factory, {
+            extraProviders
+          });
+        })
+        .then((html: string) => {
+          callback(null, html);
+        }, (err) => {
+          callback(err);
+        });
+    } catch (err) {
+      callback(err);
+    }
+  };
+}
+
+/**
+ * Get a factory from a bootstrapped module/ module factory
+ */
+function getFactory(
+  moduleOrFactory: Type<{}> | NgModuleFactory<{}>, compiler: Compiler
+): Promise<NgModuleFactory<{}>> {
+  return new Promise<NgModuleFactory<{}>>((resolve, reject) => {
+    // If module has been compiled AoT
+    if (moduleOrFactory instanceof NgModuleFactory) {
+      resolve(moduleOrFactory);
+      return;
+    } else {
+      let moduleFactory = factoryCacheMap.get(moduleOrFactory);
+
+      // If module factory is cached
+      if (moduleFactory) {
+        resolve(moduleFactory);
+        return;
+      }
+
+      // Compile the module and cache it
+      compiler.compileModuleAsync(moduleOrFactory)
+        .then((factory) => {
+          factoryCacheMap.set(moduleOrFactory, factory);
+          resolve(factory);
+        }, (err => {
+          reject(err);
+        }));
+    }
+  });
+}
+
+/**
+ * Get providers of the request and response
+ *
+function getReqResProviders(req: Request, res?: Response): StaticProvider[] {
+  const providers: StaticProvider[] = [
+    {
+      provide: REQUEST,
+      useValue: req
+    }
+  ];
+  if (res) {
+    providers.push({
+      provide: RESPONSE,
+      useValue: res
+    });
+  }
+  return providers;
+}*/
+
+/**
+ * Get the document at the file path
+ */
+function getDocument(filePath: string): string {
+  return templateCache[filePath] = templateCache[filePath] || fs.readFileSync(filePath).toString();
+}
+
+
+/**
+ * Bridge from a lambda event to angular universal
+ * @param event
+ * @param {Context} context
+ * @param {Callback} callback
+ */
+const handler: Handler = (event: any, context: Context, callback: Callback) => {
+
+  enableProdMode();
+
+  debugger;
+
+  try {
+  let setupOptions : NgSetupOptions=
+  {
+    bootstrap: AppServerModuleNgFactory,
+      providers: [
+    provideModuleMap(LAZY_MODULE_MAP)
+  ]
+  };
+  //const moduleOrFactory = options.bootstrap || setupOptions.bootstrap;
+
+  const moduleOrFactory = setupOptions.bootstrap;
+
+  const compilerFactory: CompilerFactory = platformDynamicServer().injector.get(CompilerFactory);
+  const compiler: Compiler = compilerFactory.createCompiler([
+    {
+      providers: [
+        { provide: ResourceLoader, useClass: FileLoader, deps: [] }
+      ]
+    }
+  ]);
+
+
+  const filePath = join(process.cwd(), 'browser', 'index.html');
+  const url = event.path;
+
+  const extraProviders = setupOptions.providers.concat(
+    //options.providers,
+    //getReqResProviders(options.req, options.res),
+    [
+      {
+        provide: INITIAL_CONFIG,
+        useValue: {
+          document: getDocument(filePath), // options.document || getDocument(filePath)
+          url: url// options.url //|| options.req.originalUrl
+        }
+      }
+    ]);
+
+  //const extraProviders = setupOptions.providers;
+
+  getFactory(moduleOrFactory, compiler)
+    .then(factory => {
+      return renderModuleFactory(factory, {
+        extraProviders
+      });
+    })
+    .then((html: string) => {
+      callback(null,html);
+    }, (err) => {
+      callback(err);
+    });
+} catch (err) {
+  callback(err);
+}
+};
+
+export {handler};
