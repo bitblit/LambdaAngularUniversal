@@ -50,24 +50,27 @@ rm -Rf .git
 npm install
 ```
 
-Then, you want to run configuration script:
+Then, you'll want to make a copy of the environment file and edit it, filling in your details
 
 ```
-npm run config -- --account-id="<accountId>" --bucket-name="<bucketName>" --region="<region>" --function-name="<functionName>"
+cp sample-env-file.env .env
 ```
 
-* account-id : this is obvious
-* bucket-name : From here on in, deployments will cause the whole thing to be zipped and sent to a bucket first.  This bucket.
-* region : AWS region.  I'd use **us-east-1**, but that just me.
-* function-name: Name for the lambda function that will be created.
+Don't worry, .env is in .gitignore so it won't get committed.  If you are using an CI environment like CircleCI for
+deployment you'll want to put those variables into its environmental variables, NOT in a file that gets checked in.
 
-That will set up all of the various scripts.  It doesn't put anything too terribly secret in there, just your account ID
-and a bucket name, but if someone wants to contribute a patch to externalize these I'm happy to review it.
+* LAU_ACCOUNT_ID : this is obvious
+* LAU_S3_BUCKET : From here on in, deployments will cause the whole thing to be zipped and sent to a bucket first.  This bucket.
+* LAU_AWS_REGION : AWS region.  I'd use **us-east-1**, but that just me.
+* LAU_FUNCTION_NAME: Name for the lambda function that will be created.
 
-Once that is done, you are ready to run the **first** deployment of your app:
+Make sure that the bucket exists, and that your selected AWS cli credentials have the authority to do things on the
+selected account.  Setting up privs is outside the scope of this document.
+
+Finally, do an initial deployment like so:
 
 ```
-npm run setup
+npm run package-deploy
 ```
 
 This should create the stack.  If you go to CloudFormation you should see it in there, and one of the outputs will

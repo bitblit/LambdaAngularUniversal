@@ -23,8 +23,14 @@ import {Logger} from "@bitblit/ratchet/dist/common/logger";
 
 enableProdMode();
 Logger.setLevelByName('debug');
-Logger.info("Using LAU version 1");
 const { AppServerModuleNgFactory, LAZY_MODULE_MAP } = require('../dist/server/main.bundle');
+
+
+
+Logger.info("Using LAU version 3");
+
+
+
 
 /**
  * These are the allowed options for the engine
@@ -115,6 +121,69 @@ function preProcess(event:any) : any{
   return event;
 }
 
+
+function shouldGzip(fileSize: number, contentType:string) : boolean {
+  /*
+
+  let rval : boolean = (fileSize>2048); // MTU packet is 1400 bytes
+  if (rval && contentType) {
+    let test : string = contentType.toLowerCase();
+    if (test.startsWith("image/") && test.indexOf('svg')==-1)
+    {
+      rval = false;
+    }
+    else if (test=='application/pdf')
+    {
+      rval = false;
+    }
+  }
+
+  return rval;
+  */
+  // May put this back in later
+  return true;
+}
+
+function zipAndReturn(content:any, contentType:string, callback:Callback)
+{
+  if (shouldGzip(content.length,contentType)) {
+    gzip(content).then((compressed) => {
+      let contents64 = compressed.toString('base64');
+
+      let response = {
+        statusCode: 200,
+        isBase64Encoded: true,
+        headers: {
+          'Content-Type': contentType,
+          'content-encoding': 'gzip'
+        },
+        body: contents64
+      };
+
+      Logger.debug("Sending response with gzip body, length is %d", contents64.length);
+      callback(null, response);
+    });
+  }
+  else
+    {
+      let contents64 = content.toString('base64');
+
+      let response = {
+        statusCode: 200,
+        isBase64Encoded: true,
+        headers: {
+          'Content-Type': contentType,
+        },
+        body: contents64
+      };
+
+      Logger.debug("Sending response with gzip body, length is %d", contents64.length);
+      callback(null, response);
+
+    }
+}
+
+
 /**
  * Bridge from a lambda event to angular universal
  * @param event
@@ -129,46 +198,11 @@ const handler: Handler = (inEvent: any, context: Context, callback: Callback) =>
   if (fs.existsSync(filePath)) {
     // Do something
     let contents : Buffer = fs.readFileSync(filePath);
+    let contentType : string = mime.lookup(event.path);
+    contentType = (contentType)?contentType:'application/octet-stream';
+
     Logger.debug("Read file %s and found %d bytes, clientGzip:%s",filePath, contents.length, canGZip);
-    if (canGZip && contents.length>1)
-    {
-      gzip(contents)
-        .then((compressed) => {
-          let contents64 = compressed.toString('base64');
-          let contentType : string = mime.lookup(event.path);
-          contentType = (contentType)?contentType:'application/octet-stream';
-
-          let response = {
-            statusCode: 200,
-            isBase64Encoded: true,
-            headers: {
-              'Content-Type' : contentType,
-              'content-encoding': 'gzip'
-            },
-            body: contents64
-          };
-
-          Logger.debug("Sending response with gzip body, length is %d",contents64.length);
-          callback(null, response);
-        })
-    }
-    else
-    {
-      let contents64 = contents.toString('base64');
-      let contentType : string = mime.lookup(event.path);
-      contentType = (contentType)?contentType:'application/octet-stream';
-
-      let response = {
-        statusCode: 200,
-        isBase64Encoded: true,
-        headers: {
-          "Content-Type" : contentType
-        },
-        body: contents64
-      };
-      callback(null, response);
-    }
-
+    zipAndReturn(contents,contentType,callback);
   }
   else
   {
@@ -241,47 +275,9 @@ const handler: Handler = (inEvent: any, context: Context, callback: Callback) =>
         })
         .then((html: string) => {
           Logger.debug("About to write to output : %s",html);
-
-          if (canGZip && html.length>1) {
-            gzip(html)
-              .then((compressed) => {
-                let contents64 = compressed.toString('base64');
-
-                let response = {
-                  statusCode: 200,
-                  isBase64Encoded: true,
-                  headers: {
-                    'Content-Type' : 'text/html',
-                    'content-encoding': 'gzip'
-                  },
-                  body: contents64
-                };
-
-                Logger.debug("Sending response with gzip body, length is %d",contents64.length);
-                callback(null,response);
-
-
-              });
-          }
-          else {
-
-            // The output from a Lambda proxy integration must be
-            // of the following JSON object. The 'headers' property
-            // is for custom response headers in addition to standard
-            // ones. The 'body' property  must be a JSON string. For
-            // base64-encoded payload, you must also set the 'isBase64Encoded'
-            // property to 'true'.
-            let response = {
-              statusCode: 200,
-              headers: {
-                "Content-Type" : "text/html",
-              },
-              body: html
-            };
-
-            callback(null,response);
-
-          }
+          let contentType : string = 'text/html';
+          // TODO: does this need to be a Buffer?
+          zipAndReturn(html,contentType,callback);
         }, (err) => {
           callback(err);
         });

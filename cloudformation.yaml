@@ -3,15 +3,15 @@ Transform: 'AWS::Serverless-2016-10-31'
 Description: >-
   A Angular-Lambda Bridge
 Resources:
-  angularEndpoint:
+  AngularUniversalRenderer:
     Type: 'AWS::Serverless::Function'
     Properties:
       CodeUri: ./dist
       Handler: lambda.handler
       Runtime: nodejs8.10
       Description: >-
-        A Simple lambda-angular universal handler
-      MemorySize: 512
+        Serves static files and pre-renders Angular endpoints
+      MemorySize: 192
       Timeout: 30
       Policies:
         - Version: '2012-10-17'
@@ -23,7 +23,7 @@ Resources:
             - logs:PutLogEvents
             Resource: arn:aws:logs:*:*:*
       Events:
-        Api1:
+        ApiServerlessRequest:
           Type: Api
           Properties:
             Path: /{proxy+}
