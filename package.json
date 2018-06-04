@@ -70,7 +70,6 @@
     "angular-in-memory-web-api": "~0.5.0",
     "core-js": "^2.4.1",
     "mime-types": "^2.1.18",
-    "node-gzip": "^1.1.2",
     "rxjs": "^5.5.0",
     "ts-loader": "^3.1.1",
     "zone.js": "^0.8.4"
