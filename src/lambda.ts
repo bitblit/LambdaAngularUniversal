@@ -1,5 +1,6 @@
 import {Callback, Context, Handler} from "aws-lambda";
 import * as fs from 'fs';
+import * as mime from 'mime-types';
 import 'zone.js/dist/zone-node';
 import 'reflect-metadata';
 
@@ -84,8 +85,15 @@ function getFactory(
 /**
  * Get the document at the file path
  */
-function getDocument(filePath: string): string {
-  return templateCache[filePath] = templateCache[filePath] || fs.readFileSync(filePath).toString();
+function getDocument(filePath: string, baseHref:string): string {
+  let cacheValue = templateCache[filePath];
+  if (!cacheValue)
+  {
+    let cacheValue = fs.readFileSync(filePath).toString();
+    cacheValue = cacheValue.replace('<base href="/">','<base href="'+baseHref+'">');
+    templateCache[filePath]=cacheValue;
+  }
+  return cacheValue;
 }
 
 
@@ -103,7 +111,8 @@ const handler: Handler = (event: any, context: Context, callback: Callback) => {
     // Do something
     let contents : Buffer = fs.readFileSync(filePath);
     let contents64 = contents.toString('base64');
-    let contentType : string = "application/octet-stream";
+    let contentType : string = mime.lookup(event.path);
+    contentType = (contentType)?contentType:'application/octet-stream';
 
     let response = {
       statusCode: 200,
@@ -151,7 +160,8 @@ const handler: Handler = (event: any, context: Context, callback: Callback) => {
         event['headers']['Host']+'/'+
         event['requestContext']['stage'];
         */
-      const baseHref = '/'+event['requestContext']['stage'];
+
+      const baseHref = '/'+event['requestContext']['stage']+"/";
 
       // TODO: Query params
 
@@ -164,7 +174,7 @@ const handler: Handler = (event: any, context: Context, callback: Callback) => {
           {
             provide: INITIAL_CONFIG,
             useValue: {
-              document: getDocument(filePath), // options.document || getDocument(filePath)
+              document: getDocument(filePath,baseHref), // options.document || getDocument(filePath)
               url: url// options.url //|| options.req.originalUrl
             }
           },
