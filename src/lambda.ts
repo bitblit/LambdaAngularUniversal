@@ -3,7 +3,7 @@ import * as fs from 'fs';
 import * as mime from 'mime-types';
 import 'zone.js/dist/zone-node';
 import 'reflect-metadata';
-import gzip from 'node-gzip';
+import * as zlib from 'zlib';
 
 import { enableProdMode } from '@angular/core';
 
@@ -40,6 +40,15 @@ export interface RenderOptions extends NgSetupOptions {
   url?: string;
   document?: string;
 }
+
+function gzip(input, options={}) : Promise<Buffer>{
+  var promise = new Promise<Buffer>(function (resolve, reject) {
+    zlib.gzip(input, options, function (error, result) {
+      if (!error) resolve(result);else reject(error);
+    });
+  });
+  return promise;
+};
 
 /**
  * This holds a cached version of each index used.
@@ -117,7 +126,7 @@ const handler: Handler = (inEvent: any, context: Context, callback: Callback) =>
   if (fs.existsSync(filePath)) {
     // Do something
     let contents : Buffer = fs.readFileSync(filePath);
-    if (canGZip && contents.length>4096)
+    if (canGZip && contents.length>2048)
     {
       gzip(contents)
         .then((compressed) => {
