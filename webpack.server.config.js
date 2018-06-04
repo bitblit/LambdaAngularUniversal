@@ -24,5 +24,9 @@ module.exports = {
       path.join(__dirname, 'src'), // location of your src
       {} // a map of your routes
     )
-  ]
+  ],
+  stats: {
+    warnings: false
+  },
+  mode: 'none'
 };

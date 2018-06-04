@@ -18,6 +18,7 @@ import * as mime from 'mime-types';
 import 'zone.js/dist/zone-node';
 import 'reflect-metadata';
 import * as zlib from 'zlib';
+import 'rxjs-compat';
 
 import { enableProdMode } from '@angular/core';
 
@@ -37,7 +38,7 @@ import {Logger} from "@bitblit/ratchet/dist/common/logger";
 
 enableProdMode();
 Logger.setLevelByName('debug');
-const { AppServerModuleNgFactory, LAZY_MODULE_MAP } = require('../dist/server/main.bundle');
+const { AppServerModuleNgFactory, LAZY_MODULE_MAP } = require('../dist/server/main');
 
 /**
  * These are the allowed options for the engine
