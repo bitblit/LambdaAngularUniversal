@@ -126,7 +126,7 @@ const handler: Handler = (inEvent: any, context: Context, callback: Callback) =>
   if (fs.existsSync(filePath)) {
     // Do something
     let contents : Buffer = fs.readFileSync(filePath);
-    if (canGZip && contents.length>2048)
+    if (canGZip && contents.length>1024)
     {
       gzip(contents)
         .then((compressed) => {
@@ -241,22 +241,46 @@ const handler: Handler = (inEvent: any, context: Context, callback: Callback) =>
         .then((html: string) => {
           console.log("About to write to output : "+html);
 
-          // The output from a Lambda proxy integration must be
-          // of the following JSON object. The 'headers' property
-          // is for custom response headers in addition to standard
-          // ones. The 'body' property  must be a JSON string. For
-          // base64-encoded payload, you must also set the 'isBase64Encoded'
-          // property to 'true'.
-          let response = {
-            statusCode: 200,
-            headers: {
-              "Content-Type" : "text/html",
-              "x-custom-header" : "my custom header value"
-            },
-            body: html
-          };
+          if (canGZip && html.length>1024) {
+            gzip(html)
+              .then((compressed) => {
+                let contents64 = compressed.toString('base64');
+                let contentType: string = mime.lookup(event.path);
 
-          callback(null,response);
+                let response = {
+                  statusCode: 200,
+                  headers: {
+                    'Content-Type' : 'text/html',
+                    'content-encoding': 'gzip'
+                  },
+                  body: contents64
+                };
+
+                callback(null,response);
+
+
+              });
+          }
+          else {
+
+            // The output from a Lambda proxy integration must be
+            // of the following JSON object. The 'headers' property
+            // is for custom response headers in addition to standard
+            // ones. The 'body' property  must be a JSON string. For
+            // base64-encoded payload, you must also set the 'isBase64Encoded'
+            // property to 'true'.
+            let response = {
+              statusCode: 200,
+              headers: {
+                "Content-Type" : "text/html",
+                "x-custom-header" : "my custom header value"
+              },
+              body: html
+            };
+
+            callback(null,response);
+
+          }
         }, (err) => {
           callback(err);
         });
