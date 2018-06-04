@@ -87,13 +87,15 @@ function getFactory(
  * Get the document at the file path
  */
 function getDocument(filePath: string, baseHref:string): string {
+
   let cacheValue = templateCache[filePath];
   if (!cacheValue)
   {
-    let cacheValue = fs.readFileSync(filePath).toString();
+    cacheValue = fs.readFileSync(filePath).toString();
     cacheValue = cacheValue.replace('<base href="/">','<base href="'+baseHref+'">');
     templateCache[filePath]=cacheValue;
   }
+  debugger;
   return cacheValue;
 }
 
@@ -194,6 +196,7 @@ const handler: Handler = (inEvent: any, context: Context, callback: Callback) =>
       // TODO: Query params
 
       const url = event.path;
+      const doc = getDocument(filePath, baseHref);
 
       const extraProviders = setupOptions.providers.concat(
         //options.providers,
@@ -202,7 +205,7 @@ const handler: Handler = (inEvent: any, context: Context, callback: Callback) =>
           {
             provide: INITIAL_CONFIG,
             useValue: {
-              document: getDocument(filePath,baseHref), // options.document || getDocument(filePath)
+              document: doc, // options.document || getDocument(filePath)
               url: url// options.url //|| options.req.originalUrl
             }
           },
@@ -213,11 +216,13 @@ const handler: Handler = (inEvent: any, context: Context, callback: Callback) =>
         ]);
 
       console.log("Evt : \n"+JSON.stringify(event));
+      //console.log("Doc : \n"+doc);
       console.log("Using url : "+url + " Base : "+baseHref+" FilePath: "+filePath);
 
       //const extraProviders = setupOptions.providers;
 
       console.log("About to call to factory");
+
       getFactory(moduleOrFactory, compiler)
         .then(factory => {
           return renderModuleFactory(factory, {
