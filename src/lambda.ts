@@ -245,10 +245,10 @@ const handler: Handler = (inEvent: any, context: Context, callback: Callback) =>
             gzip(html)
               .then((compressed) => {
                 let contents64 = compressed.toString('base64');
-                let contentType: string = mime.lookup(event.path);
 
                 let response = {
                   statusCode: 200,
+                  isBase64Encoded: true,
                   headers: {
                     'Content-Type' : 'text/html',
                     'content-encoding': 'gzip'
@@ -273,7 +273,6 @@ const handler: Handler = (inEvent: any, context: Context, callback: Callback) =>
               statusCode: 200,
               headers: {
                 "Content-Type" : "text/html",
-                "x-custom-header" : "my custom header value"
               },
               body: html
             };
