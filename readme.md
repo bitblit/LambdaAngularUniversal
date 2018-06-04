@@ -159,6 +159,11 @@ running an npm install into the dist directory, basically
 * fsevents includes a tar package that has bad file modification dates in it.  Zip won't accept files
 older than 1980 for some reason.  So there is a find command in here to path those
 
+## 2018-06-04 : Updating to Angular 6
+
+I am taking this up to Angular 6 - mainly following the notes here : https://dev.to/chiangs/upgrading-to-angular-6-309p
+
+
 # Contributing
 
 Pull requests are welcome, although I'm not sure why you'd be interested!
