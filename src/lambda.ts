@@ -3,6 +3,7 @@ import * as fs from 'fs';
 import * as mime from 'mime-types';
 import 'zone.js/dist/zone-node';
 import 'reflect-metadata';
+import gzip from 'node-gzip';
 
 import { enableProdMode } from '@angular/core';
 
@@ -96,6 +97,9 @@ function getDocument(filePath: string, baseHref:string): string {
   return cacheValue;
 }
 
+function preProcess(event:any) : any{
+  return event;
+}
 
 /**
  * Bridge from a lambda event to angular universal
@@ -103,27 +107,51 @@ function getDocument(filePath: string, baseHref:string): string {
  * @param {Context} context
  * @param {Callback} callback
  */
-const handler: Handler = (event: any, context: Context, callback: Callback) => {
+const handler: Handler = (inEvent: any, context: Context, callback: Callback) => {
+  let event = preProcess(inEvent);
+  let canGZip : boolean = (event.headers['Accept-Encoding'] && event.headers['Accept-Encoding'].indexOf('gzip')>-1);
   let filePath = join(process.cwd(), 'browser', event.path);
-
 
   if (fs.existsSync(filePath)) {
     // Do something
     let contents : Buffer = fs.readFileSync(filePath);
-    let contents64 = contents.toString('base64');
-    let contentType : string = mime.lookup(event.path);
-    contentType = (contentType)?contentType:'application/octet-stream';
+    if (canGZip && contents.length>4096)
+    {
+      gzip(contents)
+        .then((compressed) => {
+          let contents64 = compressed.toString('base64');
+          let contentType : string = mime.lookup(event.path);
+          contentType = (contentType)?contentType:'application/octet-stream';
 
-    let response = {
-      statusCode: 200,
-      isBase64Encoded: true,
-      headers: {
-        "Content-Type" : contentType
-      },
-      body: contents64
-    };
+          let response = {
+            statusCode: 200,
+            isBase64Encoded: true,
+            headers: {
+              'Content-Type' : contentType,
+              'content-encoding': 'gzip'
+            },
+            body: contents64
+          };
+          callback(null, response);
+        })
+    }
+    else
+    {
+      let contents64 = contents.toString('base64');
+      let contentType : string = mime.lookup(event.path);
+      contentType = (contentType)?contentType:'application/octet-stream';
 
-    callback(null,response);
+      let response = {
+        statusCode: 200,
+        isBase64Encoded: true,
+        headers: {
+          "Content-Type" : contentType
+        },
+        body: contents64
+      };
+      callback(null, response);
+    }
+
   }
   else
   {
