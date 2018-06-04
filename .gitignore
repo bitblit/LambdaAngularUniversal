@@ -3,7 +3,7 @@
 node_modules
 npm-debug.log
 dist
-cw-test.ts
+cw-test.*
 typings
 *.bak
 .DS_Store

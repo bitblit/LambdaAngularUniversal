@@ -2,7 +2,7 @@ const path = require('path');
 const webpack = require('webpack');
 
 module.exports = {
-  entry: { server: './src/server.ts', lambda: './src/lambda.ts' },
+  entry: { lambda: './src/lambda.ts' },
   resolve: { extensions: ['.js', '.ts'] },
   target: 'node',
   // this makes sure we include node_modules and other 3rd party libraries

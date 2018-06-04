@@ -1,7 +1,8 @@
 {
     "httpMethod": "GET",
     "//body": "{\"name\": \"Sam\"}",
-    "path": "/detail/14",
+  "_path": "/detail/14",
+  "path": "/index.html",
     "resource": "/{proxy+}",
     "queryStringParameters": {},
     "pathParameters": {},
