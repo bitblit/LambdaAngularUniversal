@@ -68,21 +68,23 @@
     "@bitblit/ratchet": "0.0.52",
     "@nguniversal/module-map-ngfactory-loader": "^6.0.0",
     "angular-in-memory-web-api": "~0.5.0",
-    "mime-types": "^2.1.18",
     "core-js": "^2.4.1",
+    "mime-types": "^2.1.18",
     "rxjs": "^6.1.0",
-    "zone.js": "^0.8.4",
-    "ts-loader": "^3.1.1"
+    "rxjs-compat": "^6.2.0",
+    "ts-loader": "^4.1.0",
+    "zone.js": "^0.8.4"
   },
   "devDependencies": {
+    "@angular-devkit/build-angular": "~0.6.3",
     "@angular/cli": "6.0.3",
     "@types/aws-lambda": "0.0.31",
     "@types/chai": "^3.4.34",
     "@types/chai-http": "0.0.29",
     "@types/debug": "0.0.29",
-    "@types/mocha": "^2.2.32",
     "@types/jasmine": "~2.8.0",
     "@types/jasminewd2": "^2.0.3",
+    "@types/mocha": "^2.2.32",
     "@types/node": "^6.0.45",
     "ajv": "^6.0.0",
     "aws-lambda-typescript": "^1.0.2",
@@ -104,7 +106,8 @@
     "ts-node": "^3.3.0",
     "tslint": "~5.7.0",
     "typescript": "2.7.2",
-    "@angular-devkit/build-angular": "~0.6.3"
+    "webpack": "^4.10.2",
+    "webpack-cli": "^3.0.1"
   },
   "repository": {}
 }
