@@ -19,8 +19,11 @@ import { FileLoader } from './file-loader';
 import {provideModuleMap} from "@nguniversal/module-map-ngfactory-loader";
 import {join} from "path";
 import {APP_BASE_HREF} from "@angular/common";
+import {Logger} from "@bitblit/ratchet/dist/common/logger";
 
 enableProdMode();
+Logger.setLevelByName('debug');
+Logger.info("Using LAU version 1");
 const { AppServerModuleNgFactory, LAZY_MODULE_MAP } = require('../dist/server/main.bundle');
 
 /**
@@ -126,7 +129,8 @@ const handler: Handler = (inEvent: any, context: Context, callback: Callback) =>
   if (fs.existsSync(filePath)) {
     // Do something
     let contents : Buffer = fs.readFileSync(filePath);
-    if (canGZip && contents.length>1024)
+    Logger.debug("Read file %s and found %d bytes, clientGzip:%s",filePath, contents.length, canGZip);
+    if (canGZip && contents.length>1)
     {
       gzip(contents)
         .then((compressed) => {
@@ -143,6 +147,8 @@ const handler: Handler = (inEvent: any, context: Context, callback: Callback) =>
             },
             body: contents64
           };
+
+          Logger.debug("Sending response with gzip body, length is %d",contents64.length);
           callback(null, response);
         })
     }
@@ -190,9 +196,6 @@ const handler: Handler = (inEvent: any, context: Context, callback: Callback) =>
         }
       ]);
 
-
-
-
       /*
       const baseHref =
         event['headers']['X-Forwarded-Proto']+"://"+
@@ -224,13 +227,11 @@ const handler: Handler = (inEvent: any, context: Context, callback: Callback) =>
           }
         ]);
 
-      console.log("Evt : \n"+JSON.stringify(event));
-      //console.log("Doc : \n"+doc);
-      console.log("Using url : "+url + " Base : "+baseHref+" FilePath: "+filePath);
+      Logger.debug("Evt : \n"+JSON.stringify(event));
+      Logger.silly("Doc : \n"+doc);
+      Logger.debug("Using url : "+url + " Base : "+baseHref+" FilePath: "+filePath);
 
       //const extraProviders = setupOptions.providers;
-
-      console.log("About to call to factory");
 
       getFactory(moduleOrFactory, compiler)
         .then(factory => {
@@ -239,9 +240,9 @@ const handler: Handler = (inEvent: any, context: Context, callback: Callback) =>
           });
         })
         .then((html: string) => {
-          console.log("About to write to output : "+html);
+          Logger.debug("About to write to output : %s",html);
 
-          if (canGZip && html.length>1024) {
+          if (canGZip && html.length>1) {
             gzip(html)
               .then((compressed) => {
                 let contents64 = compressed.toString('base64');
@@ -256,6 +257,7 @@ const handler: Handler = (inEvent: any, context: Context, callback: Callback) =>
                   body: contents64
                 };
 
+                Logger.debug("Sending response with gzip body, length is %d",contents64.length);
                 callback(null,response);
 
 
