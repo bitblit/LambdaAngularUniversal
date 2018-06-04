@@ -1,3 +1,17 @@
+/**
+ * TODO: This file needs a LOT of refactoring.  It started as a hack of the AngularUniversal Express adapter, and
+ * I've just hacked on it until it works and correctly does compression as well.  One potential problem is the
+ * template cache, which I don't think will work if this is being used in a whitelabel situation (essentially, if the
+ * render changes based on things external to the path, like the host).  I really should change the key on the
+ * template cache to cover all those cases, or just not use it at all.
+ *
+ * I also am not currently making use of the RenderOptions that AngularUniversal passes in (not sure if they are
+ * relevant, I'm still learning) and, importantly, I'm not passing the query string on to the AngularUniversal
+ * render engine which I think is almost certainly a mistake since query parameters can OFTEN result in a
+ * different page render.  I need to do some testing.
+ *
+ */
+
 import {Callback, Context, Handler} from "aws-lambda";
 import * as fs from 'fs';
 import * as mime from 'mime-types';
@@ -25,29 +39,12 @@ enableProdMode();
 Logger.setLevelByName('debug');
 const { AppServerModuleNgFactory, LAZY_MODULE_MAP } = require('../dist/server/main.bundle');
 
-
-
-Logger.info("Using LAU version 3");
-
-
-
-
 /**
  * These are the allowed options for the engine
  */
 export interface NgSetupOptions {
   bootstrap: Type<{}> | NgModuleFactory<{}>;
   providers?: StaticProvider[];
-}
-
-/**
- * These are the allowed options for the render
- */
-export interface RenderOptions extends NgSetupOptions {
-  req: Request;
-  res?: Response;
-  url?: string;
-  document?: string;
 }
 
 function gzip(input, options={}) : Promise<Buffer>{
