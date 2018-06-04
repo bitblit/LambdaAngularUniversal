@@ -30,11 +30,8 @@ create an Angular app that is SEO friendly and dirty cheap to run.
 * [AWS Serverless Express example template] (https://github.com/awslabs/aws-serverless-express/tree/master/example)
 
 ## TODO List
-* Verify images serve correctly
-* Compress content
-* Add ability to serve favicon.ico and whitelabel (prehandler)
 * CORS
-
+* Whitelabel handler?
 
 ## Prerequisites
 
