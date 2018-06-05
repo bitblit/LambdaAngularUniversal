@@ -18,6 +18,7 @@ import * as mime from 'mime-types';
 import 'zone.js/dist/zone-node';
 import 'reflect-metadata';
 import * as zlib from 'zlib';
+import 'rxjs-compat';
 
 import { enableProdMode } from '@angular/core';
 
@@ -37,7 +38,9 @@ import {Logger} from "@bitblit/ratchet/dist/common/logger";
 
 enableProdMode();
 Logger.setLevelByName('debug');
-const { AppServerModuleNgFactory, LAZY_MODULE_MAP } = require('../dist/server/main.bundle');
+const { AppServerModuleNgFactory, LAZY_MODULE_MAP } = require('../dist/server/main');
+
+Logger.info("Running Angular 6");
 
 /**
  * These are the allowed options for the engine
@@ -72,12 +75,15 @@ const factoryCacheMap = new Map<Type<{}>, NgModuleFactory<{}>>();
 function getFactory(
   moduleOrFactory: Type<{}> | NgModuleFactory<{}>, compiler: Compiler
 ): Promise<NgModuleFactory<{}>> {
+  //console.log("e1");
   return new Promise<NgModuleFactory<{}>>((resolve, reject) => {
+    //console.log("e2");
     // If module has been compiled AoT
     if (moduleOrFactory instanceof NgModuleFactory) {
       resolve(moduleOrFactory);
       return;
     } else {
+      //console.log("e3")
       let moduleFactory = factoryCacheMap.get(moduleOrFactory);
 
       // If module factory is cached
@@ -86,14 +92,23 @@ function getFactory(
         return;
       }
 
+      //console.log("e4 : "+JSON.stringify(moduleOrFactory));
       // Compile the module and cache it
-      compiler.compileModuleAsync(moduleOrFactory)
-        .then((factory) => {
-          factoryCacheMap.set(moduleOrFactory, factory);
-          resolve(factory);
-        }, (err => {
-          reject(err);
-        }));
+      try {
+        compiler.compileModuleAsync(moduleOrFactory)
+          .then((factory) => {
+            //console.log("e5");
+            factoryCacheMap.set(moduleOrFactory, factory);
+            resolve(factory);
+          }, (err => {
+            //console.log("e6");
+            reject(err);
+          }));
+      }
+      catch (err)
+      {
+        //console.log("e7 : "+err);
+      }
     }
   });
 }
@@ -110,7 +125,6 @@ function getDocument(filePath: string, baseHref:string): string {
     cacheValue = cacheValue.replace('<base href="/">','<base href="'+baseHref+'">');
     templateCache[filePath]=cacheValue;
   }
-  debugger;
   return cacheValue;
 }
 
@@ -188,12 +202,20 @@ function zipAndReturn(content:any, contentType:string, callback:Callback)
  * @param {Callback} callback
  */
 const handler: Handler = (inEvent: any, context: Context, callback: Callback) => {
-  console.log("a");
+  Logger.setLevelByName('debug');
+  //debugger;
+  //console.log("a");
+  Logger.debug("Starting handler");
+
   let event = preProcess(inEvent);
   let canGZip : boolean = (event.headers['Accept-Encoding'] && event.headers['Accept-Encoding'].indexOf('gzip')>-1);
   let filePath = join(process.cwd(), 'browser', event.path);
+  //console.log("b");
 
   if (fs.existsSync(filePath)) {
+    //console.log("c");
+
+    Logger.debug("Serving existing file");
     // Do something
     let contents : Buffer = fs.readFileSync(filePath);
     let contentType : string = mime.lookup(event.path);
@@ -204,6 +226,9 @@ const handler: Handler = (inEvent: any, context: Context, callback: Callback) =>
   }
   else
   {
+    Logger.debug("Serving angular path");
+    //console.log("d");
+
     // Render with Angular
     let filePath = join(process.cwd(), 'browser', "index.html");
 
@@ -216,8 +241,6 @@ const handler: Handler = (inEvent: any, context: Context, callback: Callback) =>
           ]
         };
       //const moduleOrFactory = options.bootstrap || setupOptions.bootstrap;
-
-      console.log("Bootstrap : "+JSON.stringify(setupOptions.bootstrap));
 
       const moduleOrFactory = setupOptions.bootstrap;
 
@@ -240,7 +263,6 @@ const handler: Handler = (inEvent: any, context: Context, callback: Callback) =>
       const baseHref = '/'+event['requestContext']['stage']+"/";
 
       // TODO: Query params
-
       const url = event.path;
       const doc = getDocument(filePath, baseHref);
 
@@ -267,8 +289,12 @@ const handler: Handler = (inEvent: any, context: Context, callback: Callback) =>
 
       //const extraProviders = setupOptions.providers;
 
+      Logger.debug("Calling getFactory, Module: %j \n\nCompiler: %j\n",moduleOrFactory, compiler);
+      //console.log("e");
+
       getFactory(moduleOrFactory, compiler)
         .then(factory => {
+          //console.log("f = "+JSON.stringify(factory));
           return renderModuleFactory(factory, {
             extraProviders
           });
@@ -279,9 +305,11 @@ const handler: Handler = (inEvent: any, context: Context, callback: Callback) =>
           // TODO: does this need to be a Buffer?
           zipAndReturn(html,contentType,callback);
         }, (err) => {
+          //console.error(err);
           callback(err);
         });
     } catch (err) {
+      //console.error(err);
       callback(err);
     }
   }

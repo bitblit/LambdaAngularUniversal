@@ -1,12 +1,12 @@
 # LambdaAngularUniversal
 
-**Updated June 3rd, 2018**
+**Updated June 5th, 2018**
 
 This project unites several of my most commonly used technologies in a way that solves a lot of problems for me.  Specifically:
 
-1.  I use Angular 5.x because the model feels comfortable to me and Typescript makes it maintainable.  It is in my
+1.  I use Angular 6.x because the model feels comfortable to me and Typescript makes it maintainable.  It is in my
 sweet spot between being able to build a tight, useable interface but still have close control over the HTML.
-2. Angular 5.x creates a problem though - websites built with it have an initial slow load and worse, they perform
+2. Angular 6.x creates a problem though - websites built with it have an initial slow load and worse, they perform
 quite poorly on SEO unless you do a bunch of extra work.
 3. Angular Universal (now part of Angular proper) solves problem #2 by pre-rendering the content on the server.  Web
 crawlers get the pre-rendered version, and the javascript shows up some seconds later converting it into a 
@@ -20,7 +20,7 @@ Plus, it was a huge pain to deploy.
 it and Express since it was kinda unnecessary overhead for the simplistic use case here.
 7. We'll use a custom generated AWS SSL certificate so our website is HTTPS everywhere.
 
-So that's the big summary of what I'm doing in this project.  Combining Angular5+AngularUniversal+AWSServerlessExpress to
+So that's the big summary of what I'm doing in this project.  Combining Angular6+AngularUniversal+AWSServerlessExpress to
 create an Angular app that is SEO friendly and dirty cheap to run.
 
 ## Technology links
@@ -158,6 +158,20 @@ doing them.
 running an npm install into the dist directory, basically
 * fsevents includes a tar package that has bad file modification dates in it.  Zip won't accept files
 older than 1980 for some reason.  So there is a find command in here to path those
+
+## 2018-06-04 : Updating to Angular 6
+
+On 2018-06-04 to 05 I updated this to use Angular 6 (I used the notes at https://dev.to/chiangs/upgrading-to-angular-6-309p and
+also https://github.com/hapinessjs/ng-universal-module).  The good news is that it works.  The bad news is that,
+at least with the Angular TOH codebase that I ported the --prod flag does not work.  I am merging it forward so 
+that I can do further testing but obviously I'd like to fix that.  If you wish to use the Angular5 version of
+this codebase, you can checkout the **2018-06-04-Working-Angular-5** tag, which is the last work I'll be 
+doing on the Angular 5 version.  
+
+If you'd like to use Angular6, but want to test it in prod mode for yourself, all you have to do is edit package.json
+and add --prod to the **ng build** command in the **build-client-and-server-bundles** script.
+
+Once I get it working for prod mode, this note should go away (except the tag for 5, which I'll leave in here indefinitely)
 
 # Contributing
 
