@@ -277,9 +277,11 @@ const handler: Handler = (inEvent: any, context: Context, callback: Callback) =>
           // TODO: does this need to be a Buffer?
           zipAndReturn(html,contentType,callback);
         }, (err) => {
+          console.error(err);
           callback(err);
         });
     } catch (err) {
+      console.error(err);
       callback(err);
     }
   }
