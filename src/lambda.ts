@@ -188,6 +188,7 @@ function zipAndReturn(content:any, contentType:string, callback:Callback)
  * @param {Callback} callback
  */
 const handler: Handler = (inEvent: any, context: Context, callback: Callback) => {
+  console.log("a");
   let event = preProcess(inEvent);
   let canGZip : boolean = (event.headers['Accept-Encoding'] && event.headers['Accept-Encoding'].indexOf('gzip')>-1);
   let filePath = join(process.cwd(), 'browser', event.path);
@@ -215,6 +216,8 @@ const handler: Handler = (inEvent: any, context: Context, callback: Callback) =>
           ]
         };
       //const moduleOrFactory = options.bootstrap || setupOptions.bootstrap;
+
+      console.log("Bootstrap : "+JSON.stringify(setupOptions.bootstrap));
 
       const moduleOrFactory = setupOptions.bootstrap;
 

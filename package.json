@@ -4,7 +4,7 @@
   "description": "Template for creating Angular 5 universal apps atop Lambda",
   "main": "lambda.js",
   "scripts": {
-    "test-var" : "source .env && echo $LAU_STACK_NAME",
+    "test-var": "source .env && echo $LAU_STACK_NAME",
     "ng": "ng",
     "build": "ng build --prod",
     "start": "ng serve",
