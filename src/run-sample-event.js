@@ -4,6 +4,7 @@ var fs = require("fs");
 var lambda = require("./lambda");
 var zlib = require('zlib');
 
+
 var evtString = fs.readFileSync('./sample-api-gateway-event.json').toString('ascii');
 var evt = JSON.parse(evtString);
 var context = {
