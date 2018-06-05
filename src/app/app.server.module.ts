@@ -9,8 +9,8 @@ import { AppComponent } from './app.component';
   imports: [
     AppModule,
     ServerModule,
-    ModuleMapLoaderModule,
-    ServerTransferStateModule
+    ModuleMapLoaderModule
+    ,ServerTransferStateModule
   ],
   providers: [
     // Add universal-only providers here
