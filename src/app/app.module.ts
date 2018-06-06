@@ -42,7 +42,9 @@ import { isPlatformBrowser } from '@angular/common';
   providers: [ HeroService, MessageService ],
   bootstrap: [ AppComponent ]
 })
+//export class AppModule {}
 export class AppModule {
+
   constructor(
     @Inject(PLATFORM_ID) private platformId: Object,
     @Inject(APP_ID) private appId: string) {
@@ -50,4 +52,5 @@ export class AppModule {
       'in the browser' : 'on the server';
     console.log(`Running ${platform} with appId=${appId}`);
   }
+
 }

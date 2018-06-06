@@ -1,12 +1,12 @@
 # LambdaAngularUniversal
 
-**Updated April 30th, 2018**
+**Updated June 5th, 2018**
 
 This project unites several of my most commonly used technologies in a way that solves a lot of problems for me.  Specifically:
 
-1.  I use Angular 5.x because the model feels comfortable to me and Typescript makes it maintainable.  It is in my
+1.  I use Angular 6.x because the model feels comfortable to me and Typescript makes it maintainable.  It is in my
 sweet spot between being able to build a tight, useable interface but still have close control over the HTML.
-2. Angular 5.x creates a problem though - websites built with it have an initial slow load and worse, they perform
+2. Angular 6.x creates a problem though - websites built with it have an initial slow load and worse, they perform
 quite poorly on SEO unless you do a bunch of extra work.
 3. Angular Universal (now part of Angular proper) solves problem #2 by pre-rendering the content on the server.  Web
 crawlers get the pre-rendered version, and the javascript shows up some seconds later converting it into a 
@@ -16,14 +16,11 @@ lazy and cheap.
 to convert HTTP requests into Lambda events, but historically the tooling for using API gateway requests was kinda rough.
 Plus, it was a huge pain to deploy.  
 5. Cloudformation SAM templates take care of the deployment pain.
-6. A library, **aws-serverless-express** acts as an adapter allowing one to run a generic express application atop
-lambda.  It even includes a tool for easily bootstrapping your first release.  It isn't in Typescript though, so
-I fix that.
-7. API gateway, by default, requires you to mount your API under a "stage" name, the first part of the path.  We'll 
-fix that by mapping a custom domain name to the root in API gateway.  We'll also use a custom generated AWS
-SSL certificate so our website is HTTPS everywhere.
+6. Previously I used the **aws-serverless-express** library as a bridge, but with the June release of this I am removing
+it and Express since it was kinda unnecessary overhead for the simplistic use case here.
+7. We'll use a custom generated AWS SSL certificate so our website is HTTPS everywhere.
 
-So thats the big summary of what I'm doing in this project.  Combining Angular5+AngularUniversal+AWSServerlessExpress to
+So that's the big summary of what I'm doing in this project.  Combining Angular6+AngularUniversal+AWSServerlessExpress to
 create an Angular app that is SEO friendly and dirty cheap to run.
 
 ## Technology links
@@ -32,11 +29,15 @@ create an Angular app that is SEO friendly and dirty cheap to run.
 * [Angular Universal] (https://angular.io/guide/universal)
 * [AWS Serverless Express example template] (https://github.com/awslabs/aws-serverless-express/tree/master/example)
 
+## TODO List
+* CORS
+* Whitelabel handler?
+
 ## Prerequisites
 
 Using this is pretty straightforward.  You'll need an AWS account, and keys running on your local machine for
 that account that basically have Power User priv.  Step them down later once you seen just how many privs you're
-going to need.  You'll also need to know the AWS account ID.  Oh, and you need Node (^6.10) and NPM.
+going to need.  You'll also need to know the AWS account ID.  Oh, and you need Node (^8.10) and NPM.
 
 ## First Run
 
@@ -49,25 +50,27 @@ rm -Rf .git
 npm install
 ```
 
-Then, you want to create a `.env` file at the root of the project with the following content:
-```
-AWS_ACCOUNT_ID=<account-id>
-S3_BUCKET_NAME=<bucket-name>
-AWS_REGION=<region>
-LAMBDA_FUNCTION_NAME=<function-name>
-CF_STACK_NAME=<stack-name>
-```
-
-* account-id : this is obvious
-* bucket-name : From here on in, deployments will cause the whole thing to be zipped and sent to a bucket first.  This bucket.
-* region : AWS region.  I'd use **us-east-1**, but that just me.
-* function-name: Name for the lambda function that will be created.
-* stack-name: Name for the Cloudformation stack that will be created.
-
-Once that is done, you are ready to run the **first** deployment of your app:
+Then, you'll want to make a copy of the environment file and edit it, filling in your details
 
 ```
-npm run setup
+cp sample-env-file.env .env
+```
+
+Don't worry, .env is in .gitignore so it won't get committed.  If you are using an CI environment like CircleCI for
+deployment you'll want to put those variables into its environmental variables, NOT in a file that gets checked in.
+
+* LAU_ACCOUNT_ID : this is obvious
+* LAU_S3_BUCKET : From here on in, deployments will cause the whole thing to be zipped and sent to a bucket first.  This bucket.
+* LAU_AWS_REGION : AWS region.  I'd use **us-east-1**, but that just me.
+* LAU_FUNCTION_NAME: Name for the lambda function that will be created.
+
+Make sure that the bucket exists, and that your selected AWS cli credentials have the authority to do things on the
+selected account.  Setting up privs is outside the scope of this document.
+
+Finally, do an initial deployment like so:
+
+```
+npm run package-deploy
 ```
 
 This should create the stack.  If you go to CloudFormation you should see it in there, and one of the outputs will
@@ -136,21 +139,14 @@ npm run delete-stack
 
 ## Running locally
 
-There are 2 ways of running locally - the first is to run the full Universal stack.  You can do that by running:
-
-```
-npm run serve-full
-```
-
-This is useful for checking how it handles generating the snapshot (curl it to see that you are getting more than
-just the Angular placeholder).  However, I don't use it for day-to-day work since the webpack stuff for the
-server is pretty slow.  Instead, most of the time I use just the standard Angular endpoint:
+Just the standard Angular endpoint:
 
 ```
 npm run start
 ```
 
 This runs Angular like you would if you weren't using Universal et al.  Much faster for day-to-day development.
+
 
 ## Weird notes
 
@@ -162,9 +158,20 @@ doing them.
 running an npm install into the dist directory, basically
 * fsevents includes a tar package that has bad file modification dates in it.  Zip won't accept files
 older than 1980 for some reason.  So there is a find command in here to path those
-* There is still something weird about the build - if left without doing a clean the next package fails.  Need
-to investigate eventually, but at the moment this is solved by always doing a clean as part of the 
-"package" task.  A bit slower, but at least it works
+
+## 2018-06-04 : Updating to Angular 6
+
+On 2018-06-04 to 05 I updated this to use Angular 6 (I used the notes at https://dev.to/chiangs/upgrading-to-angular-6-309p and
+also https://github.com/hapinessjs/ng-universal-module).  The good news is that it works.  The bad news is that,
+at least with the Angular TOH codebase that I ported the --prod flag does not work.  I am merging it forward so 
+that I can do further testing but obviously I'd like to fix that.  If you wish to use the Angular5 version of
+this codebase, you can checkout the **2018-06-04-Working-Angular-5** tag, which is the last work I'll be 
+doing on the Angular 5 version.  
+
+If you'd like to use Angular6, but want to test it in prod mode for yourself, all you have to do is edit package.json
+and add --prod to the **ng build** command in the **build-client-and-server-bundles** script.
+
+Once I get it working for prod mode, this note should go away (except the tag for 5, which I'll leave in here indefinitely)
 
 # Contributing
 
