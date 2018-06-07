@@ -31,7 +31,10 @@
     "serverless",
     "universal"
   ],
-  "author": "Christopher Weiss <bitblit@gmail.com>",
+  "contributors": [
+    "Christopher Weiss <bitblit@gmail.com>",
+    "William Weiss <npm@codification.org>"
+  ],
   "bugs": {
     "url": "https://github.com/bitblit/LambdaAngularUniversal/issues"
   },
